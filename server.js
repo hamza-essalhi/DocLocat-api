@@ -45,9 +45,9 @@ app.use(helmet()); // Helmet middleware for setting secure HTTP headers
 // Rate limiting to prevent abuse
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 200, // limit each IP to 100 requests per windowMs
 });
-/* app.use(limiter); */
+app.use(limiter);
 
 // Routes with Token Verification Middleware
 app.use('/api/auth', authRoutes);
