@@ -14,7 +14,7 @@ router.get('/all', async (req, res) => {
     const user = await User.findById(req.user.userId);
     const  userId =user.id
    
-    const historyEntries = await History.find({userId:userId});
+    const historyEntries = await History.find({userId:userId}).sort({ createdAt: -1 });
     res.json(historyEntries);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });

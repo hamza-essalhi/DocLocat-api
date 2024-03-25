@@ -34,7 +34,7 @@ const userSchema = new Schema({
     about: {
         type: String,
     },
-    categorie: {
+    category: {
         type: String,
     },
     address:{
@@ -42,6 +42,10 @@ const userSchema = new Schema({
     },
     city:{
         type: String,
+    },
+    verified:{
+        type:Boolean,
+        default:false
     }
 
 },

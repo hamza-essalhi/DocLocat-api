@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/all', async (req, res) => {
   try {
     // Use projection to exclude the password field
-    const doctors = await User.find({ role: 'doctor' }, { password: 0 });
+    const doctors = await User.find({ role: 'doctor' }, { password: 0 }).sort({ createdAt: -1 });
     res.json(doctors);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -29,7 +29,7 @@ router.get('/user/:id', async (req, res) => {
 // Search doctors based on criteria
 router.get('/search', async (req, res) => {
   try {
-    const { name, city, categorie } = req.query;
+    const { name, city, category } = req.query;
 
     let query = { role: 'doctor' };
 
@@ -40,11 +40,11 @@ router.get('/search', async (req, res) => {
     if (city) {
       query = { ...query, city: { $regex: city, $options: 'i' } };
     }
-    if (categorie) {
-      query = { ...query, categorie: { $regex: categorie, $options: 'i' } };
+    if (category) {
+      query = { ...query, category: { $regex: category, $options: 'i' } };
     }
 
-    const doctors = await User.find(query, { password: 0 });
+    const doctors = await User.find(query, { password: 0 }).sort({ createdAt: -1 });
 
     res.json(doctors);
   } catch (error) {

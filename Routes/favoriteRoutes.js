@@ -9,7 +9,7 @@ router.post('/add', async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     const  userId =user.id
-    const {doctorId, doctorName, doctorAddress, doctorPhone, appointmentDate, appointmentTime } = req.body;
+    const {doctorId, doctorName, doctorAddress, doctorPhone} = req.body;
    
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -48,13 +48,25 @@ router.get('/all', async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     const  userId =user.id
-    const favorites = await Favorite.find({ userId: userId });
+    const favorites = await Favorite.find({ userId: userId }).sort({ createdAt: -1 });
     res.json(favorites);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
+// Get all favorites for a specific user
+router.get('/user/:id', async (req, res) => {
+  const id =req.params.id
+  try {
+    const user = await User.findById(req.user.userId);
+    const  userId =user.id
+    const favorites = await Favorite.find({ userId: userId,doctorId:id });
+    res.json(favorites);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // Delete a favorite by ID
 router.delete('/id/:id', async (req, res) => {

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Appointment = require('../models/Appointment');
-const adminAccess = require('../middlewares/RoleMiddleware');
 const User = require("../models/User")
 
 
@@ -87,7 +86,7 @@ router.delete('/id/:id', async (req, res) => {
     if (!deletedAppointment) {
       return res.status(404).json({ error: "Appointment not found" });
     }
-    res.json({ message: "Appointment deleted successfully" });
+    res.json(deletedAppointment);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
@@ -109,23 +108,49 @@ router.get('/id/:id', async (req, res) => {
 // Get appointments by User ID
 router.get('/all', async (req, res) => {
   try {
-   const user = await User.findById(req.user.userId);
-    const  userId =user.id
-   
-    if (user.role =="doctor"){
-      const appointments = await Appointment.find({ doctorId: userId});
-      res.json(appointments);
+    const userId = req.user.userId; // Assuming userId is in headers
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-    else{
-      const appointments = await Appointment.find({ userId: userId});
-      res.json(appointments);
+
+    let appointments;
+    if (user.role === "doctor") {
+      // If the user is a doctor, find appointments where the doctorId or userId matches
+      appointments = await Appointment.find({
+        $or: [
+          { doctorId: userId },
+          { userId: userId }
+        ]
+      }).sort({ createdAt: -1 });
+    } else {
+      // If the user is not a doctor, find appointments where the userId matches
+      appointments = await Appointment.find({ userId: userId }).sort({ createdAt: -1 });
     }
-    
+
+    if (appointments.length === 0) {
+      return res.status(404).json({ message: "No appointments found for this user" });
+    }
+
+    res.json(appointments);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
+router.get('/user/:id', async (req, res) => {
+  const id =req.params.id
+  try {
+    const user = await User.findById(req.user.userId);
+    const  userId =user.id
+    const appointment = await Appointment.find({ userId: userId,doctorId:id });
+    res.json(appointment[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 module.exports = router;
