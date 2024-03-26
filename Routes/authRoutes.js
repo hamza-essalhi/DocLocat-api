@@ -86,10 +86,36 @@ const verificationEmailSender = async ({ type, id, email, name, verificationLink
     res.status(500).json({ error: err.message });
   }
 };
+router.post('/contact-us', limiter(6), async (req, res) => {
+  const { email, message, fullName } = req.body
+  const mailOptions = {
+
+    from: email,
+    to: config.EMAIL,
+    subject: `Email from ${fullName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333; font-size: 24px; margin:20px;">Email from ${fullName}</h2>
+        <p style="color: #666; font-size: 16px; margin:50px 20px;">
+          ${message}
+        </p>
+      </div>
+    `,
+  };
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json("Email sent successfully");
+
+  }
+  catch{
+    // Send error response
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
 
 
-router.post('/register',limiter(6) ,async (req, res) => {
- 
+router.post('/register', limiter(6), async (req, res) => {
+
   try {
     // Hash the password using bcrypt
     const hashedPassword = await bcrypt.hash(req.body.password, parseInt(config.NUMBE));
@@ -126,8 +152,8 @@ router.post('/register',limiter(6) ,async (req, res) => {
   }
 });
 
-router.post('/login',limiter(5), async (req, res) => {
-  
+router.post('/login', limiter(5), async (req, res) => {
+
   try {
     // Find the user by email
     if (!req.body.email || !req.body.password) {
@@ -283,14 +309,14 @@ router.delete('/delete', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/verification/',limiter(3), async (req, res) => {
+router.post('/verification/', limiter(3), async (req, res) => {
   try {
     const { id, token } = req.body;
 
     // Find the verification document
     const verification = await Verification.findOne({ userId: id, type: "email" });
-  
-    
+
+
     if (!verification) {
       return res.status(404).json({ error: 'Invalid verification token' });
     }
@@ -311,7 +337,7 @@ router.post('/verification/',limiter(3), async (req, res) => {
       return res.status(400).json({ error: 'Verification token has expired' });
     }
 
-    
+
 
     // Verification token is valid, mark the user as verified
     await User.findByIdAndUpdate(id, { verified: true }, { new: true });
@@ -327,7 +353,7 @@ router.post('/verification/',limiter(3), async (req, res) => {
 });
 
 
-router.post('/reset-password',limiter(3), async (req, res) => {
+router.post('/reset-password', limiter(3), async (req, res) => {
   try {
     const { id, token, password } = req.body;
 
@@ -354,7 +380,7 @@ router.post('/reset-password',limiter(3), async (req, res) => {
       return res.status(400).json({ error: 'Verification token has expired' });
     }
 
- 
+
     const hashedPassword = await bcrypt.hash(password, parseInt(config.NUMBE));
 
     // Verification token is valid, mark the user as verified
@@ -384,8 +410,8 @@ router.post('/send-password-verification', limiter(3), async (req, res) => {
       return res.status(404).json({ error: 'User is not verified. Please check your email for verification.Or request a new verification', emailVerification: true });
     }
     const verificationToken = uuidv4() + user.id;
-  
-    
+
+
     const verificationLink = `${config.REACT_URL}/reset-password/${user.id}/${verificationToken}`;
     verificationEmailSender(
       {
